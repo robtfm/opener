@@ -32,19 +32,23 @@
 
 #[cfg(all(feature = "reveal", target_os = "linux"))]
 mod freedesktop;
-#[cfg(not(any(target_os = "windows", target_os = "macos")))]
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_arch="wasm32")))]
 mod linux_and_more;
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
+#[cfg(target_arch = "wasm32")]
+mod wasm;
 
-#[cfg(not(any(target_os = "windows", target_os = "macos")))]
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_arch = "wasm32")))]
 use crate::linux_and_more as sys;
 #[cfg(target_os = "macos")]
 use crate::macos as sys;
 #[cfg(target_os = "windows")]
 use crate::windows as sys;
+#[cfg(target_arch = "wasm32")]
+use crate::wasm as sys;
 
 use std::error::Error;
 use std::ffi::{OsStr, OsString};
@@ -240,7 +244,7 @@ fn wsl_to_windows_path(_path: &OsStr) -> Option<OsString> {
     unreachable!()
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_arch="wasm32")))]
 fn wait_child(child: &mut std::process::Child, cmd_name: &'static str) -> Result<(), OpenError> {
     use std::io::Read;
 
