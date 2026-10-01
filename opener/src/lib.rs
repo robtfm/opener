@@ -102,7 +102,10 @@ where
             }
         };
 
-        Command::new(&browser_var)
+        let mut command = Command::new(&browser_var);
+        #[cfg(not(any(target_os = "windows", target_os = "macos", target_arch = "wasm32")))]
+        command.env_remove(sys::LD_LIBRARY_PATH);
+        command
             .arg(path)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
