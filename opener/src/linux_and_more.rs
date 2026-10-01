@@ -6,6 +6,10 @@ use std::process::{Child, Command, Stdio};
 
 const XDG_OPEN_SCRIPT: &[u8] = include_bytes!("xdg-open");
 
+/// Not passed on to the opened program: the caller's value is there to locate the caller's own
+/// bundled libraries, which can stop an unrelated program (a browser, say) from starting.
+pub(crate) const LD_LIBRARY_PATH: &str = "LD_LIBRARY_PATH";
+
 pub(crate) fn open(path: &OsStr) -> Result<(), OpenError> {
     if crate::is_wsl() {
         wsl_open(path)
@@ -60,6 +64,7 @@ fn non_wsl_open(path: &OsStr) -> Result<(), OpenError> {
 fn open_with_wslview(path: &OsStr) -> io::Result<Child> {
     Command::new("wslview")
         .arg(path)
+        .env_remove(LD_LIBRARY_PATH)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
@@ -69,6 +74,7 @@ fn open_with_wslview(path: &OsStr) -> io::Result<Child> {
 fn open_with_system_xdg_open(path: &OsStr) -> io::Result<Child> {
     Command::new("xdg-open")
         .arg(path)
+        .env_remove(LD_LIBRARY_PATH)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -79,6 +85,7 @@ fn open_with_internal_xdg_open(path: &OsStr) -> Result<Child, OpenError> {
     let mut sh = Command::new("sh")
         .arg("-s")
         .arg(path)
+        .env_remove(LD_LIBRARY_PATH)
         .stdin(Stdio::piped())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
